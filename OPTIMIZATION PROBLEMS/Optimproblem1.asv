@@ -1,0 +1,59 @@
+function total = shipCost(x)
+    d = [2, 3, 2.5];          % durations
+    s = x;                    % start times
+    e = s + d;                % end times
+    
+    makespan = max(e);        % when all done
+    
+    % penalty for overlapping transfers
+    overlap = 0;
+    for i = 1:3
+        for j = i+1:3
+            ov = max(0, min(e(i), e(j)) - max(s(i), s(j)));
+            overlap = overlap + ov;
+        end
+    end
+    
+    total = makespan + 1000*overlap; % 1000 = big penalty
+end
+
+
+% GA genetic Alogrithm
+tic
+[x_ga, f_ga] = ga(@shipCost, 3, [],[],[],[], [0 0 0], [10 10 10], [], ...
+    optimoptions('ga','MaxGenerations',50,'Display','off'));
+time_ga = toc;
+
+% fmincon - Gradient based
+tic
+x0 = [0 2 5]; % initial guess
+[x_fmin, f_fmin] = fmincon(@shipCost, x0, [],[],[],[], [0 0 0], [10 10 10], [], ...
+    optimoptions('fmincon','Display','off'));
+time_fmin = toc;
+
+% particleswarm
+tic
+[x_ps, f_ps] = particleswarm(@shipCost, 3, [0 0 0], [10 10 10], ...
+    optimoptions('particleswarm','SwarmSize',30,'MaxIterations',50,'Display','off'));
+time_ps = toc;
+
+% patternsearch
+tic
+x0 = [0 2 5];
+[x_pat, f_pat] = patternsearch(@shipCost, x0, [],[],[],[], [0 0 0], [10 10 10], ...
+    optimoptions('patternsearch','Display','off','MaxIterations',100));
+time_pat = toc;
+
+% surrogateopt
+tic
+[x_sur, f_sur] = surrogateopt(@shipCost, [0 0 0], [10 10 10], ...
+    optimoptions('surrogateopt','MaxFunctionEvaluations',100,'Display','off'));
+time_sur = toc;
+
+% simulannealbnd
+tic
+x0 = [0 2 5];
+[x_sa, f_sa] = simulannealbnd(@shipCost, x0, [0 0 0], [10 10 10], ...
+    optimoptions('simulannealbnd','Display','off','MaxFunctionEvaluations',500));
+time_sa = toc;
+
